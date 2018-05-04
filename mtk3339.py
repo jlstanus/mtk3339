@@ -2,6 +2,7 @@ import operator
 import serial
 import os
 import time
+import functools
 
 class mt3339():
 	def __init__(self, device):
@@ -29,14 +30,14 @@ class mt3339():
 		self.baudrate = 9600
 
 	def nmea_checksum(self, sentence):
-		checksum = reduce(operator.xor, (ord(s) for s in sentence), 0)
+		checksum = functools.reduce(operator.xor, (ord(s) for s in sentence), 0)
 		return checksum
 
 	def create_nmea_command(self, command, params):
 		if command not in self.valid_commands:
 			return -1
 		else:
-			command_pmtk = "PMTK" + unicode(self.valid_commands[command]) + unicode(params)
+			command_pmtk = "PMTK" + str(self.valid_commands[command]) + str(params)
 			checksum = "{:02X}".format(self.nmea_checksum(command_pmtk))
 			nmea_command = "".join(["$", command_pmtk, "*", checksum, "\r\n"])
 			return nmea_command
@@ -48,7 +49,7 @@ class mt3339():
 		else:
 			self.baudrate = baudrate
 			command = "SET_NMEA_BAUDRATE"
-			params = "," + unicode(baudrate)
+			params = "," + str(baudrate)
 			nmea_command = self.create_nmea_command(command, params)
 			self.send_command(nmea_command)
 			return 0
@@ -59,7 +60,7 @@ class mt3339():
 			return -1
 		else:
 			command = "SET_NMEA_UPDATERATE"
-			params = "," + unicode(rate)
+			params = "," + str(rate)
 			nmea_command = self.create_nmea_command(command, params)
 			self.send_command(nmea_command)
 			return 0
@@ -70,7 +71,7 @@ class mt3339():
 			return -1
 		else:
 			command = "API_SET_FIX_CTL"
-			params = "," + unicode(rate) + ",0,0,0,0"
+			params = "," + str(rate) + ",0,0,0,0"
 			nmea_command = self.create_nmea_command(command, params)
 			self.send_command(nmea_command)
 			return 0
@@ -142,8 +143,8 @@ class mt3339():
 		if gsv not in self.nmea_output_frequency:
 				return -1
 		command = "API_SET_NMEA_OUTPUT"
-		params = "," + unicode(gll) + "," + unicode(rmc) + "," + unicode(vtg)\
-			+ "," + unicode(gga) + "," + unicode(gsa) + "," + unicode(gsv)\
+		params = "," + str(gll) + "," + str(rmc) + "," + str(vtg)\
+			+ "," + str(gga) + "," + str(gsa) + "," + str(gsv)\
 			+ ",0,0,0,0,0,0,0,0,0,0,0,0,0"
 		nmea_command = self.create_nmea_command(command, params)
 		self.send_command(nmea_command)
@@ -152,7 +153,7 @@ class mt3339():
 	def send_command(self, nmea_command):
 		ser = serial.Serial(port = self.device, baudrate = self.baudrate, timeout=3)
 		time.sleep(0.1)
-		ser.write(nmea_command);
+		ser.write(str.encode(nmea_command));
 		time.sleep(0.1)
 		ser.close()
 
@@ -165,4 +166,3 @@ class mt3339():
 #gps.set_nmea_update_rate(1000)
 #gps.set_nav_speed_threshold(1.5)
 #gps.set_nmea_output(gll = 0, rmc = 1, vtg = 0, gga = 5, gsa = 5, gsv = 5)
-
